@@ -83,7 +83,7 @@
 #define SCT_8 (8) //Horno microondas
 
 /* Select a compilation choise	*/
-#define TEST (SCT_4)
+#define TEST (SCT_5)
 
 
 #define TICKRATE_1MS	(1)				/* 1000 ticks per second */
@@ -527,7 +527,122 @@ int main(void)
 #endif
 
 #if (TEST == SCT_5)
+DEBUG_PRINT_ENABLE;
 
+void prefixIface_aSetModo(Prefix* handle, sc_integer modo)
+{
+	switch (modo){
+	case 1:
+		debugPrintString( "Modo microondas seleccionado\r\n" );
+		break;
+	case 2:
+		debugPrintString( "Modo grill seleccionado\r\n" );
+		break;
+	case 3:
+		debugPrintString( "Modo microondas+grill seleccionado\r\n" );
+		break;
+	}
+}
+
+void prefixIface_aSetHorno(Prefix* handle, sc_integer modo)
+{
+	switch (modo){
+	case 0:
+		debugPrintString( "Horno apagado\r\n" );
+		break;
+	case 1:
+		debugPrintString( "Microondas encendido\r\n" );
+		break;
+	case 2:
+		debugPrintString( "Grill encendido\r\n" );
+		break;
+	case 3:
+		debugPrintString( "Microondas y Grill encendidos\r\n" );
+		break;
+	}
+}
+
+void prefixIface_aSetLuz(Prefix* handle, sc_boolean State)
+{
+	if (State) debugPrintString( "Luz Encendida \r\n" );
+	else debugPrintString( "Luz Apagada \r\n" );
+}
+
+
+uint32_t Buttons_GetStatus_(void) {
+	uint8_t ret = false;
+	uint32_t idx;
+
+	for (idx = 0; idx < 4; ++idx) {
+		if (gpioRead( TEC1 + idx ) == 0)
+			ret |= 1 << idx;
+	}
+	return ret;
+}
+
+/**
+ * @brief	main routine for statechart example
+ * @return	Function should not exit.
+ */
+int main(void)
+{
+	#if (__USE_TIME_EVENTS == true)
+	uint32_t i;
+	#endif
+
+	uint32_t BUTTON_Status;
+
+	/* Generic Initialization */
+	boardConfig();
+
+	/* Init Ticks counter => TICKRATE_MS */
+	tickConfig( TICKRATE_MS );
+
+	/* Add Tick Hook */
+	tickCallbackSet( myTickHook, (void*)NULL );
+
+	/* UART for debug messages. */
+	debugPrintConfigUart( UART_USB, 115200 );
+	debugPrintString( "DEBUG c/sAPI\r\n" );
+
+	/* Statechart Initialization */
+	#if (__USE_TIME_EVENTS == true)
+	InitTimerTicks(ticks, NOF_TIMERS);
+	#endif
+
+	prefix_init(&statechart);
+	prefix_enter(&statechart);
+
+	/* LEDs toggle in main */
+	while (1) {
+		__WFI();
+
+		if (SysTick_Time_Flag == true) {
+			SysTick_Time_Flag = false;
+
+			#if (__USE_TIME_EVENTS == true)
+			UpdateTimers(ticks, NOF_TIMERS);
+			for (i = 0; i < NOF_TIMERS; i++) {
+				if (IsPendEvent(ticks, NOF_TIMERS, ticks[i].evid) == true) {
+
+					prefix_raiseTimeEvent(&statechart, ticks[i].evid);	// Event -> Ticks.evid => OK
+					MarkAsAttEvent(ticks, NOF_TIMERS, ticks[i].evid);
+				}
+			}
+			#else
+			prefixIface_raise_evTick(&statechart);					// Event -> evTick => OK
+			#endif
+
+			BUTTON_Status = Buttons_GetStatus_();
+			if (BUTTON_Status != 0)									// Event -> evTECXOprimodo => OK
+				prefixIface_raise_evTECXOprimido(&statechart, BUTTON_Status);	// Value -> Tecla
+			else													// Event -> evTECXNoOprimido => OK
+				prefixIface_raise_evTECXNoOprimido(&statechart);
+
+			prefix_runCycle(&statechart);							// Run Cycle of Statechart
+		}
+	}
+}
 #endif
 
 #if (TEST == SCT_6)
