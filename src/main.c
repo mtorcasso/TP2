@@ -49,7 +49,6 @@
 #include "Prefix.h"
 #include "TimerTicks.h"
 
-
 /*==================[macros and definitions]=================================*/
 /* Compilation choices */
 #define SCT_1 (1)	/* Test Statechart EDU-CIAA-NXP - Blink LED3
@@ -77,10 +76,10 @@
  	 	 	 	 	 	rm prefix.sct
  	 	 	 	 	 	cp Porton.-sct prefix.sct 							 		*/
 #define SCT_4 (4) //Panel de de control generador de señales
-#define SCT_5 (5) //Puerta corrediza
+#define SCT_5 (5) //Microondas
 #define SCT_6 (6) //Porton cochera
 #define SCT_7 (7) //Escalera Mecanica
-#define SCT_8 (8) //Horno microondas
+#define SCT_8 (8) //Puerta corrediza
 
 /* Select a compilation choise	*/
 #define TEST (SCT_5)
@@ -646,7 +645,103 @@ int main(void)
 #endif
 
 #if (TEST == SCT_6)
+DEBUG_PRINT_ENABLE;
 
+void prefixIface_opAbriendo(Prefix* handle)
+{
+	debugPrintString( "Luz roja encendida - Motor encendido - Abriendo puerta\r\n" );
+}
+
+void prefixIface_opCerrando(Prefix* handle)
+{
+	debugPrintString( "Luz roja encendida - Motor encendido - Cerrando puerta\r\n" );
+}
+
+void prefixIface_opCerrado(Prefix* handle)
+{
+	debugPrintString( "Luz verde encendida - Motor apagado - Puerta cerrada\r\n" );
+}
+
+void prefixIface_opAbierto(Prefix* handle)
+{
+	debugPrintString( "Luz roja encendida - Motor apagado - Puerta abierta\r\n" );
+}
+
+
+uint32_t Buttons_GetStatus_(void) {
+	uint8_t ret = false;
+	uint32_t idx;
+
+	for (idx = 0; idx < 4; ++idx) {
+		if (gpioRead( TEC1 + idx ) == 0)
+			ret |= 1 << idx;
+	}
+	return ret;
+}
+
+/**
+ * @brief	main routine for statechart example
+ * @return	Function should not exit.
+ */
+int main(void)
+{
+	#if (__USE_TIME_EVENTS == true)
+	uint32_t i;
+	#endif
+
+	uint32_t BUTTON_Status;
+
+	/* Generic Initialization */
+	boardConfig();
+
+	/* Init Ticks counter => TICKRATE_MS */
+	tickConfig( TICKRATE_MS );
+
+	/* Add Tick Hook */
+	tickCallbackSet( myTickHook, (void*)NULL );
+
+	/* UART for debug messages. */
+	debugPrintConfigUart( UART_USB, 115200 );
+	debugPrintString( "DEBUG c/sAPI\r\n" );
+
+	/* Statechart Initialization */
+	#if (__USE_TIME_EVENTS == true)
+	InitTimerTicks(ticks, NOF_TIMERS);
+	#endif
+
+	prefix_init(&statechart);
+	prefix_enter(&statechart);
+
+	/* LEDs toggle in main */
+	while (1) {
+		__WFI();
+
+		if (SysTick_Time_Flag == true) {
+			SysTick_Time_Flag = false;
+
+			#if (__USE_TIME_EVENTS == true)
+			UpdateTimers(ticks, NOF_TIMERS);
+			for (i = 0; i < NOF_TIMERS; i++) {
+				if (IsPendEvent(ticks, NOF_TIMERS, ticks[i].evid) == true) {
+
+					prefix_raiseTimeEvent(&statechart, ticks[i].evid);	// Event -> Ticks.evid => OK
+					MarkAsAttEvent(ticks, NOF_TIMERS, ticks[i].evid);
+				}
+			}
+			#else
+			prefixIface_raise_evTick(&statechart);					// Event -> evTick => OK
+			#endif
+
+			BUTTON_Status = Buttons_GetStatus_();
+			if (BUTTON_Status != 0)									// Event -> evTECXOprimodo => OK
+				prefixIface_raise_evTECXOprimido(&statechart, BUTTON_Status);	// Value -> Tecla
+			else													// Event -> evTECXNoOprimido => OK
+				prefixIface_raise_evTECXNoOprimido(&statechart);
+
+			prefix_runCycle(&statechart);							// Run Cycle of Statechart
+		}
+	}
+}
 #endif
 
 #if (TEST == SCT_7)
