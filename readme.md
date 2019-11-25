@@ -32,9 +32,11 @@ Los modelos asociados a los distintos ejemplos realizados en el trabajo práctic
 4. Editar la definición "TEST" en el main para coincidir con el modelo generado (ver imagen debajo)
 5. Definir si se utilizarán Time Events mediante #define __USE_TIME_EVENTS (true/false)
 5. Debuggear
+
 ![comp_condicional](https://github.com/mtorcasso/TP2/blob/master/img/comp_condicional.png)
 
 Nota: Para generar el código con Yakindu, el proyecto debe estar previamente compilado; de lo contrario arrojará error.
+
 
 ## Ejemplo Blinky sin Time Events
 En primera instancia se debe configurar en el *main.c* la compilación condicional según 
@@ -43,24 +45,35 @@ Ademas, para el caso sin Time Events, se configura
 ```#define __USE_TIME_EVENTS (false)```
 
 ### Diagrama de estados y main.c
+
 ![diagrama_blinky](https://github.com/mtorcasso/TP2/blob/master/img/diagrama_blinky.png)
+
 ![main_blinky](https://github.com/mtorcasso/TP2/blob/master/img/main_blinky.png)
 
 ### Funciones sin TimeEvents
 - Los primeros tres llamados corresponden a las funciones *boardConfig(), tickConfig() y tickCallbackSet()* que ya fueron analizadas en el TP1, y corresponden a la configuración de puertos, de la frecuencia de interrupciones del tick, y de la ISR del tick, junto con la función *myTickHook()*
 - Luego se realiza un llamado a *prefix_init(&statechart)*
+
 ![prefix_init](https://github.com/mtorcasso/TP2/blob/master/img/prefix_init.png)
+
 Esta funcion inicializa la máquina de estados definiendo su estructura de datos interna. Además, mediante prefix_clearInEvents() setea todos los eventos en estado false.
 - Luego se llama a *prefix_enter()* que tras sucesivos llamados configura la secuencia de entrada de la maquina de estados, en este caso configurando el estado APAGADO.
 - En el bucle principal del programa, se espera a que ocurra una interrupción de tick, y en ese momento se ejecuta la función *prefixIface_raise_evTick(&statechart)* donde se setea true en el evento de tick, permitiendo a la maquina de estado cambiar de estado o ejecutar una acción.
+
 ![raise_tick](https://github.com/mtorcasso/TP2/blob/master/img/raise_tick.png)
+
 - Mediante la función *prefix_runCycle()* se actualiza el estado y se ejecutan las acciones. Finalmente mediante la función *prefixIface_opLED()* definida por el usuario, se enciende o apaga el LED utilizando gpioWrite().
+
 ![prefix_runcycle](https://github.com/mtorcasso/TP2/blob/master/img/prefix_runcycle.png)
+
 
 ## Ejemplo Blinky con Time Events
 En este caso, en vez de levantar un evento de tick cada vez que ocurra una interrupción, se alimentará directamente al statechart con una base de tiempo dada por el tick, e internamente se podrá utilizar esta base de tiempo en el diagrama de estado a traves de eventos predefinidos, como por ejemplo *"after 250ms"*, según se observa en la siguiente imagen.
+
 ![diagrama_blinkytime](https://github.com/mtorcasso/TP2/blob/master/img/diagrama_blinkytime.png)
+
 
 ### Funciones con TimeEvents
 - Al comienzo del programa se definen las funciones *prefix_setTimer()* y *prefix_unsetTimer()* que configuran los timer para los distintos eventos, en la entrada y salida de un estado respectivamente.
+
 ![timer_set_unset](https://github.com/mtorcasso/TP2/blob/master/img/timer_set_unset.png)
