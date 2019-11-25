@@ -46,7 +46,7 @@ Ademas, para el caso sin Time Events, se configura
 ![diagrama_blinky](https://github.com/mtorcasso/TP2/blob/master/img/diagrama_blinky.png)
 ![main_blinky](https://github.com/mtorcasso/TP2/blob/master/img/main_blinky.png)
 
-###Funciones sin TimeEvents
+### Funciones sin TimeEvents
 - Los primeros tres llamados corresponden a las funciones *boardConfig(), tickConfig() y tickCallbackSet()* que ya fueron analizadas en el TP1, y corresponden a la configuración de puertos, de la frecuencia de interrupciones del tick, y de la ISR del tick, junto con la función *myTickHook()*
 - Luego se realiza un llamado a *prefix_init(&statechart)*
 ![prefix_init](https://github.com/mtorcasso/TP2/blob/master/img/prefix_init.png)
@@ -61,6 +61,6 @@ Esta funcion inicializa la máquina de estados definiendo su estructura de datos
 En este caso, en vez de levantar un evento de tick cada vez que ocurra una interrupción, se alimentará directamente al statechart con una base de tiempo dada por el tick, e internamente se podrá utilizar esta base de tiempo en el diagrama de estado a traves de eventos predefinidos, como por ejemplo *"after 250ms"*, según se observa en la siguiente imagen.
 ![diagrama_blinkytime](https://github.com/mtorcasso/TP2/blob/master/img/diagrama_blinkytime.png)
 
-###Funciones con TimeEvents
+### Funciones con TimeEvents
 - Al comienzo del programa se definen las funciones *prefix_setTimer()* y *prefix_unsetTimer()* que configuran los timer para los distintos eventos, en la entrada y salida de un estado respectivamente.
 ![timer_set_unset](https://github.com/mtorcasso/TP2/blob/master/img/timer_set_unset.png)
