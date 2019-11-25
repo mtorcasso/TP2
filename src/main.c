@@ -82,7 +82,7 @@
 #define SCT_8 (8) //Puerta corrediza
 
 /* Select a compilation choise	*/
-#define TEST (SCT_5)
+#define TEST (SCT_1)
 
 
 #define TICKRATE_1MS	(1)				/* 1000 ticks per second */
@@ -98,7 +98,7 @@ static Prefix statechart;
 
 /* Select a TimeEvents choise	*/
 //#define __USE_TIME_EVENTS (false)	/* "false" without TimeEvents */
-#define __USE_TIME_EVENTS (true)	/* or "true" with TimerEvents */
+#define __USE_TIME_EVENTS (false)	/* or "true" with TimerEvents */
 
 /*! This is a timed state machine that requires timer services */
 #if (__USE_TIME_EVENTS == true)
